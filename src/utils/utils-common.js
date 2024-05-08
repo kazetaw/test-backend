@@ -1,7 +1,8 @@
 const convertStrToDate = (date) => {
-    return new Date(date)
-}
-
-module.exports = {
+    return new Date(date);
+  }
+  
+  module.exports = {
     convertStrToDate
-}
+  }
+  
