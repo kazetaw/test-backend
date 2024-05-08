@@ -8,47 +8,70 @@ generator client {
 }
 
 model User {
-  id       Int    @id @default(autoincrement())
+  id        Int     @id @default(autoincrement())
   firstName String
-  lastName String
-  username String @unique
-  password String
-  
+  lastName  String
+  logins    Login[] @relation("UserLogins")
+
   @@map("users")
-
 }
-model Content {
-  C_id       Int    @id @default(autoincrement())
-  name String @unique
+
+model Login {
+  id       Int    @id @default(autoincrement())
+  username String
   password String
-  
-  @@map("content")
+  user     User?  @relation("UserLogins", fields: [userId], references: [id])
 
+  // Add a foreign key to User
+  userId Int?
+
+  @@map("login")
 }
+
 model PageType {
-  type_id     Int       @id @default(autoincrement())
-  type_name   String
-  created_at  DateTime  @default(now())
-  updated_at  DateTime  @updatedAt
+  id        Int          @id @default(autoincrement())
+  typeName  String
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  pages     SinglePage[]
 
-  // Add this field to establish the relationship
-  singlePages SinglePage[]
-    @@map("page_type")
-
+  @@map("page_type")
 }
 
 model SinglePage {
   id              Int       @id @default(autoincrement())
   title           String
   content         Json
-  created_at      DateTime  @default(now())
-  updated_at      DateTime  @updatedAt
-  timestamp_create DateTime
-  title_images    String
-  pagelink        String
-  type_id         Int
-  type            PageType  @relation(fields: [type_id], references: [type_id])
-  @@map("single_page")
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  timestampCreate DateTime
+  titleImages     String
+  pageLink        String
+  isActive        Boolean
+  type            PageType? @relation(fields: [typeId], references: [id])
+  typeId          Int?
+  @@map("single_pages")
 }
 
+model Tag {
+  id      Int    @id @default(autoincrement())
+  tagName String
+  @@map("tag")
+}
 
+model ManageMenu {
+  id       Int         @id @default(autoincrement())
+  menuName String
+  path     String
+  isActive Boolean
+  parent   ManageMenu? @relation("ManageMenuChildren", fields: [parentId], references: [id])
+
+  // Add a foreign key to itself
+  parentId  Int?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  children ManageMenu[] @relation("ManageMenuChildren")
+
+  @@map("manage_menu")
+}
