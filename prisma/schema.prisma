@@ -6,25 +6,21 @@ datasource db {
 generator client {
   provider = "prisma-client-js"
 }
-
 model User {
   id        Int     @id @default(autoincrement())
   firstName String
   lastName  String
-  logins    Login[] @relation("UserLogins")
-
+  email String @unique
+  login Login?
   @@map("users")
 }
-
 model Login {
   id       Int    @id @default(autoincrement())
   username String
   password String
-  user     User?  @relation("UserLogins", fields: [userId], references: [id])
-
   // Add a foreign key to User
-  userId Int?
-
+  user   User   @relation(fields: [userId], references: [id])
+  userId Int    @unique
   @@map("login")
 }
 
@@ -34,7 +30,6 @@ model PageType {
   createdAt DateTime     @default(now())
   updatedAt DateTime     @updatedAt
   pages     SinglePage[]
-
   @@map("page_type")
 }
 

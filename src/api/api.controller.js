@@ -87,6 +87,7 @@ const getConnectDB = async (request, res) => {
       statusCode: 200,
       result: {
         getUserAll,
+        getUser,
       },
     };
   } catch (error) {
@@ -94,35 +95,34 @@ const getConnectDB = async (request, res) => {
     return Boom.badImplementation(error);
   }
 };
-const userLogin = async (request, response) => {
+
+const userLogin = async (request, h) => {
   try {
     const { username, password } = request.payload;
+    const hashedPassword = md5(password); // Hash the password using MD5
 
-    // ค้นหาผู้ใช้จากฐานข้อมูล
-    const user = await prisma.user.findUnique({
+    // Find the user with the provided username and check if the password matches
+    const user = await prisma.user.findFirst({
       where: {
-        username: username,
+        login: {
+          username,
+          password: hashedPassword,
+        },
+      },
+      include: {
+        login: true,
       },
     });
 
-    // ตรวจสอบว่ามีผู้ใช้หรือไม่
     if (!user) {
-      return Boom.notFound("User not found");
+      return h.response({ error: 'Invalid credentials' }).code(401);
     }
 
-    // เข้ารหัสรหัสผ่านที่รับมาเป็น MD5
-    const hashedPassword = md5(password);
-
-    // ตรวจสอบรหัสผ่านที่เข้ารหัสแล้วว่าตรงกันหรือไม่
-    if (user.password !== hashedPassword) {
-      return Boom.unauthorized("Incorrect password");
-    }
-
-    // ส่งคืนข้อมูลผู้ใช้ที่เข้าสู่ระบบสำเร็จ
-    return { message: "Login successful", user: { username: user.username, firstName: user.firstName, lastName: user.lastName } };
+    // Return the user information or generate a token for authentication
+    return h.response({ message: 'Login successful', user });
   } catch (error) {
-    console.error("Error:", error);
-    return Boom.badImplementation("Internal server error");
+    console.error('Error:', error);
+    return h.response('Internal server error').code(500);
   }
 };
 
@@ -140,8 +140,6 @@ const getUsers = async (request, response) => {
     if (existingUser) {
       return Boom.badRequest('Username already exists');
     }
-
-    // สร้างผู้ใช้ใหม่
     const newUser = await prisma.user.create({
       data: {
         username: username,
@@ -155,123 +153,73 @@ const getUsers = async (request, response) => {
     return Boom.badImplementation('Internal server error');
   }
 };
-const userRegister = async (request, response) => {
-  try {
-    const { username, password, firstName, lastName } = request.payload;
-
-    // ตรวจสอบว่า username ซ้ำหรือไม่
-    const existingUser = await prisma.user.findUnique({
-      where: {
-        username: username
-      }
-    });
-
-    if (existingUser) {
-      return Boom.badRequest('Username already exists');
-    }
-
-    // เข้ารหัสรหัสผ่านเป็น MD5
-    const hashedPassword = md5(password);
-
-    // สร้างผู้ใช้ใหม่
-    const newUser = await prisma.user.create({
-      data: {
-        username: username,
-        password: hashedPassword, // ใช้รหัสผ่านที่เข้ารหัสแล้ว
-        firstName: firstName,
-        lastName: lastName,
-      }
-    });
-
-    return { message: 'User registered successfully', user: newUser };
-  } catch (error) {
-    console.error('Error:', error);
-    return Boom.badImplementation('Internal server error');
-  }
-};
 
 const createSinglePage = async (request, h) => {
   try {
-    const { title, content, timestamp_create, title_images, pagelink, type_id } = request.payload;
+    const { title, content, typeId, titleImages, pageLink, isActive } = request.payload;
 
     const newSinglePage = await prisma.singlePage.create({
       data: {
         title,
         content,
-        timestamp_create,
-        title_images,
-        pagelink,
-        type: { connect: { type_id } } // Connect to PageType
-      }
+        typeId,
+        titleImages,
+        pageLink,
+        isActive,
+      },
     });
 
-    return { message: 'Single page created successfully', data: newSinglePage };
+    return h.response({ message: 'Single page created successfully', data: newSinglePage }).code(201);
   } catch (error) {
     console.error('Error:', error);
-    return Boom.badImplementation('Internal server error');
+    return h.response('Internal server error').code(500);
   }
 };
-const updatePageTypeById = async (request, h) => {
-  try {
-    const { id } = request.params; // รับค่า ID ของ PageType ที่ต้องการอัปเดต
-    const { type_name } = request.payload; // รับค่า type_name ที่ต้องการเปลี่ยนแปลง
-
-    const updatedPageType = await prisma.pageType.update({
-      where: { type_id: parseInt(id) }, // กำหนดเงื่อนไขในการค้นหา PageType ที่ต้องการอัปเดตตาม ID
-      data: {
-        type_name // กำหนดค่าใหม่ของ type_name ที่ต้องการเปลี่ยนแปลง
-      }
-    });
-
-    return { message: 'PageType updated successfully', data: updatedPageType };
-  } catch (error) {
-    console.error('Error:', error);
-    return Boom.badImplementation('Internal server error');
-  }
-};
-
-
 const getSinglePageById = async (request, h) => {
   try {
-    const { id } = request.params;
-
-    const singlePage = await prisma.singlePage.findUnique({
-      where: { id: parseInt(id) },
-      include: { type: true } // Include PageType information
+    const singlePages = await prisma.singlePage.findMany({
+      include: {
+        type: true, // Include the related PageType
+      },
     });
 
-    if (!singlePage) {
-      return Boom.notFound('Single page not found');
-    }
-
-    return { data: singlePage };
+    return h.response({ data: singlePages });
   } catch (error) {
     console.error('Error:', error);
-    return Boom.badImplementation('Internal server error');
+    return h.response('Internal server error').code(500);
   }
 };
 
 const updateSinglePageById = async (request, h) => {
   try {
-    const { id } = request.params; // รับค่า ID ของ SinglePage ที่ต้องการอัปเดต
-    const { title, content, timestamp_create, title_images, pagelink, type_id } = request.payload; // รับค่าที่ต้องการเปลี่ยนแปลง
+    const { id } = request.params;
+    const { title, content, typeId, titleImages, pageLink, isActive } = request.payload;
+
+    // Check if the SinglePage record exists
+    const existingSinglePage = await prisma.singlePage.findUnique({
+      where: { id: parseInt(id) },
+    });
+
+    if (!existingSinglePage) {
+      return h.response({ error: 'Single page not found' }).code(404);
+    }
 
     const updatedSinglePage = await prisma.singlePage.update({
-      where: { id: parseInt(id) }, // กำหนดเงื่อนไขในการค้นหา SinglePage ที่ต้องการอัปเดตตาม ID
+      where: { id: parseInt(id) },
       data: {
         title,
         content,
-        timestamp_create,
-        title_images,
-        pagelink,
-        type_id // กำหนดค่าใหม่ของ type_id ที่ต้องการเปลี่ยนแปลง
-      }
+        typeId,
+        titleImages,
+        pageLink,
+        isActive,
+      },
     });
 
-    return { message: 'SinglePage updated successfully', data: updatedSinglePage };
+    return h.response({ message: 'Single page updated successfully', data: updatedSinglePage });
   } catch (error) {
     console.error('Error:', error);
-    return Boom.badImplementation('Internal server error');
+    return h.response('Internal server error').code(500);
   }
 };
 
@@ -280,34 +228,336 @@ const deleteSinglePageById = async (request, h) => {
   try {
     const { id } = request.params;
 
-    await prisma.singlePage.delete({
-      where: { id: parseInt(id) }
+    const deletedSinglePage = await prisma.singlePage.delete({
+      where: { id: parseInt(id) },
     });
 
-    return { message: 'Single page deleted successfully' };
+    if (!deletedSinglePage) {
+      return h.response({ error: 'Single page not found' }).code(404);
+    }
+
+    return h.response({ message: 'Single page deleted successfully' });
   } catch (error) {
     console.error('Error:', error);
-    return Boom.badImplementation('Internal server error');
+    return h.response('Internal server error').code(500);
   }
 };
 const createPageType = async (request, h) => {
   try {
-    const { type_name } = request.payload; // รับค่า type_name ที่ต้องการสร้าง
+    const { typeName } = request.payload;
 
     const newPageType = await prisma.pageType.create({
       data: {
-        type_name // กำหนดค่าใหม่ของ type_name ที่ต้องการสร้าง
+        typeName
       }
     });
 
-    return { message: 'PageType created successfully', data: newPageType };
+    return h.response({ message: 'PageType created successfully', data: newPageType }).code(201);
   } catch (error) {
     console.error('Error:', error);
-    return Boom.badImplementation('Internal server error');
+    return h.response('Internal server error').code(500);
+  }
+};
+const getPageTypeById = async (request, h) => {
+  try {
+    const { id } = request.params;
+
+    const pageType = await prisma.pageType.findUnique({
+      where: { id: parseInt(id) }
+    });
+
+    if (!pageType) {
+      return h.response('PageType not found').code(404);
+    }
+
+    return h.response(pageType).code(200);
+  } catch (error) {
+    console.error('Error:', error);
+    return h.response('Internal server error').code(500);
+  }
+};
+const updatePageTypeById = async (request, h) => {
+  try {
+    const { id } = request.params;
+    const { typeName } = request.payload;
+
+    const updatedPageType = await prisma.pageType.update({
+      where: { id: parseInt(id) },
+      data: {
+        typeName
+      }
+    });
+
+    return h.response({ message: 'PageType updated successfully', data: updatedPageType }).code(200);
+  } catch (error) {
+    console.error('Error:', error);
+    return h.response('Internal server error').code(500);
+  }
+};
+const deletePageTypeById = async (request, h) => {
+  try {
+    const { id } = request.params;
+
+    await prisma.pageType.delete({
+      where: { id: parseInt(id) }
+    });
+
+    return h.response({ message: 'PageType deleted successfully' }).code(200);
+  } catch (error) {
+    console.error('Error:', error);
+    return h.response('Internal server error').code(500);
+  }
+};
+const createTag = async (request, h) => {
+  try {
+    const { tagName } = request.payload;
+
+    const newTag = await prisma.tag.create({
+      data: {
+        tagName
+      }
+    });
+
+    return h.response({ message: 'Tag created successfully', data: newTag }).code(201);
+  } catch (error) {
+    console.error('Error:', error);
+    return h.response('Internal server error').code(500);
+  }
+};
+const getTagById = async (request, h) => {
+  try {
+    const { id } = request.params;
+
+    const tag = await prisma.tag.findUnique({
+      where: { id: parseInt(id) }
+    });
+
+    if (!tag) {
+      return h.response('Tag not found').code(404);
+    }
+
+    return h.response(tag).code(200);
+  } catch (error) {
+    console.error('Error:', error);
+    return h.response('Internal server error').code(500);
+  }
+};
+const updateTagById = async (request, h) => {
+  try {
+    const { id } = request.params;
+    const { tagName } = request.payload;
+
+    const updatedTag = await prisma.tag.update({
+      where: { id: parseInt(id) },
+      data: {
+        tagName
+      }
+    });
+
+    return h.response({ message: 'Tag updated successfully', data: updatedTag }).code(200);
+  } catch (error) {
+    console.error('Error:', error);
+    return h.response('Internal server error').code(500);
+  }
+};
+const deleteTagById = async (request, h) => {
+  try {
+    const { id } = request.params;
+
+    await prisma.tag.delete({
+      where: { id: parseInt(id) }
+    });
+
+    return h.response({ message: 'Tag deleted successfully' }).code(200);
+  } catch (error) {
+    console.error('Error:', error);
+    return h.response('Internal server error').code(500);
+  }
+};
+const userRegister = async (request, h) => {
+  try {
+    const { firstName, lastName, email, username, password } = request.payload;
+    const hashedPassword = md5(password); // เข้ารหัสรหัสผ่านเป็น MD5
+
+    // Check if the email already exists
+    const existingUser = await prisma.user.findFirst({
+      where: {
+        email: email
+      }
+    });
+
+    if (existingUser) {
+      return h.response({ error: 'Email already exists' }).code(400);
+    }
+
+    // Create new user with login information
+    const newUser = await prisma.user.create({
+      data: {
+        firstName,
+        lastName,
+        email,
+        login: {
+          create: {
+            username,
+            password: hashedPassword // ใช้รหัสผ่านที่เข้ารหัส MD5
+          }
+        }
+      },
+      include: {
+        login: true
+      }
+    });
+
+    return h.response({ message: 'User registered successfully', user: newUser }).code(201);
+  } catch (error) {
+    console.error('Error:', error);
+    return h.response('Internal server error').code(500);
   }
 };
 
+const usersList = async (request, h) =>{
+};
+
+const createUser = async (req, res) => {
+};
+const createSinglePages = async (request, h) => {
+  try {
+    const { title, content, typeId, titleImages, pageLink, isActive } = request.payload;
+
+    // Check if the provided typeId exists in the PageType table
+    const existingPageType = await prisma.pageType.findUnique({
+      where: { id: typeId },
+    });
+
+    if (!existingPageType) {
+      return h.response({ error: 'Invalid typeId. PageType not found.' }).code(400);
+    }
+
+    const newSinglePage = await prisma.singlePage.create({
+      data: {
+        title,
+        content,
+        typeId,
+        titleImages,
+        pageLink,
+        isActive,
+        timestampCreate: new Date(),
+      },
+    });
+
+    return h.response({ message: 'Single page created successfully', data: newSinglePage }).code(201);
+  } catch (error) {
+    console.error('Error:', error);
+    return h.response('Internal server error').code(500);
+  }
+};
+const createManageMenu = async (request, h) => {
+  try {
+    const { menuName, path, isActive, parentId } = request.payload;
+
+    const newManageMenu = await prisma.manageMenu.create({
+      data: {
+        menuName,
+        path,
+        isActive,
+        parentId,
+      },
+    });
+
+    return h.response({ message: 'Manage menu created successfully', data: newManageMenu }).code(201);
+  } catch (error) {
+    console.error('Error:', error);
+    return h.response('Internal server error').code(500);
+  }
+};
+const updateManageMenu = async (request, h) => {
+  try {
+    const { id } = request.params;
+    const { menuName, path, isActive, parentId } = request.payload;
+
+    const updatedManageMenu = await prisma.manageMenu.update({
+      where: { id: parseInt(id) },
+      data: {
+        menuName,
+        path,
+        isActive,
+        parentId,
+      },
+    });
+
+    if (!updatedManageMenu) {
+      return h.response({ error: 'Manage menu not found' }).code(404);
+    }
+
+    return h.response({ message: 'Manage menu updated successfully', data: updatedManageMenu });
+  } catch (error) {
+    console.error('Error:', error);
+    return h.response('Internal server error').code(500);
+  }
+};
+const deleteManageMenu = async (request, h) => {
+  try {
+    const { id } = request.params;
+
+    const deletedManageMenu = await prisma.manageMenu.delete({
+      where: { id: parseInt(id) },
+    });
+
+    if (!deletedManageMenu) {
+      return h.response({ error: 'Manage menu not found' }).code(404);
+    }
+
+    return h.response({ message: 'Manage menu deleted successfully' });
+  } catch (error) {
+    console.error('Error:', error);
+    return h.response('Internal server error').code(500);
+  }
+};
+const getAllManageMenus = async (request, h) => {
+  try {
+    const manageMenus = await prisma.manageMenu.findMany({
+      include: {
+        parent: true, // Include the parent ManageMenu
+        children: true, // Include the child ManageMenus
+      },
+    });
+
+    return h.response({ data: manageMenus });
+  } catch (error) {
+    console.error('Error:', error);
+    return h.response('Internal server error').code(500);
+  }
+};
+
+const getManageMenuById = async (request, h) => {
+  try {
+    const { id } = request.params;
+
+    const manageMenu = await prisma.manageMenu.findUnique({
+      where: { id: parseInt(id) },
+      include: {
+        parent: true, // Include the parent ManageMenu
+        children: true, // Include the child ManageMenus
+      },
+    });
+
+    if (!manageMenu) {
+      return h.response({ error: 'Manage menu not found' }).code(404);
+    }
+
+    return h.response({ data: manageMenu });
+  } catch (error) {
+    console.error('Error:', error);
+    return h.response('Internal server error').code(500);
+  }
+};
+
+
 module.exports = {
+  createManageMenu,
+  updateManageMenu,
+  deleteManageMenu,
+  getManageMenuById,
   helloWord,
   getParameter,
   getQueryString,
@@ -320,6 +570,16 @@ module.exports = {
   getSinglePageById,
   updateSinglePageById,
   deleteSinglePageById,
-  updatePageTypeById,
   createPageType,
+  usersList,
+  createUser,
+  createSinglePages,
+  getPageTypeById,
+  deletePageTypeById,
+  updatePageTypeById,
+  createTag,
+  getTagById,
+  updateTagById,
+  deleteTagById,
+
 };
