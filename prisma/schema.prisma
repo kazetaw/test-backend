@@ -60,7 +60,7 @@ model ManageMenu {
   path     String
   isActive Boolean
   parent   ManageMenu? @relation("ManageMenuChildren", fields: [parentId], references: [id])
-
+  icons String
   // Add a foreign key to itself
   parentId  Int?
   createdAt DateTime @default(now())

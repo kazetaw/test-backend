@@ -414,11 +414,79 @@ const userRegister = async (request, h) => {
     return h.response('Internal server error').code(500);
   }
 };
-
-const usersList = async (request, h) =>{
+const getAllUsers = async (request, h) => {
+  try {
+    const users = await prisma.user.findMany();
+    return h.response({ users }).code(200);
+  } catch (error) {
+    console.error('Error:', error);
+    return h.response('Internal server error').code(500);
+  }
 };
+const getUserById = async (request, h) => {
+  try {
+    const { id } = request.params;
+    const user = await prisma.user.findUnique({
+      where: {
+        id: parseInt(id)
+      }
+    });
 
-const createUser = async (req, res) => {
+    if (!user) {
+      return h.response({ error: 'User not found' }).code(404);
+    }
+
+    return h.response({ user }).code(200);
+  } catch (error) {
+    console.error('Error:', error);
+    return h.response('Internal server error').code(500);
+  }
+};
+const updateUser = async (request, h) => {
+  try {
+    const { id } = request.params;
+    const { firstName, lastName, email, username } = request.payload;
+
+    const updatedUser = await prisma.user.update({
+      where: {
+        id: parseInt(id)
+      },
+      data: {
+        firstName,
+        lastName,
+        email,
+        login: {
+          update: {
+            username
+          }
+        }
+      },
+      include: {
+        login: true
+      }
+    });
+
+    return h.response({ message: 'User updated successfully', user: updatedUser }).code(200);
+  } catch (error) {
+    console.error('Error:', error);
+    return h.response('Internal server error').code(500);
+  }
+};
+const deleteUser = async (request, h) => {
+  try {
+    const { id } = request.params;
+
+    const deletedUser = await prisma.user.delete({
+      where: {
+        id: parseInt(id)
+      }
+    });
+
+    return h.response({ message: 'User deleted successfully', user: deletedUser }).code(200);
+  } catch (error) {
+    console.error('Error:', error);
+    return h.response('Internal server error').code(500);
+  }
 };
 const createSinglePages = async (request, h) => {
   try {
@@ -453,7 +521,7 @@ const createSinglePages = async (request, h) => {
 };
 const createManageMenu = async (request, h) => {
   try {
-    const { menuName, path, isActive, parentId } = request.payload;
+    const { menuName, path, isActive, parentId,icons } = request.payload;
 
     const newManageMenu = await prisma.manageMenu.create({
       data: {
@@ -461,6 +529,7 @@ const createManageMenu = async (request, h) => {
         path,
         isActive,
         parentId,
+        icons,
       },
     });
 
@@ -473,7 +542,7 @@ const createManageMenu = async (request, h) => {
 const updateManageMenu = async (request, h) => {
   try {
     const { id } = request.params;
-    const { menuName, path, isActive, parentId } = request.payload;
+    const { menuName, path, isActive, parentId,icons } = request.payload;
 
     const updatedManageMenu = await prisma.manageMenu.update({
       where: { id: parseInt(id) },
@@ -482,6 +551,7 @@ const updateManageMenu = async (request, h) => {
         path,
         isActive,
         parentId,
+        icons,
       },
     });
 
@@ -513,39 +583,30 @@ const deleteManageMenu = async (request, h) => {
     return h.response('Internal server error').code(500);
   }
 };
-const getAllManageMenus = async (request, h) => {
-  try {
-    const manageMenus = await prisma.manageMenu.findMany({
-      include: {
-        parent: true, // Include the parent ManageMenu
-        children: true, // Include the child ManageMenus
-      },
-    });
-
-    return h.response({ data: manageMenus });
-  } catch (error) {
-    console.error('Error:', error);
-    return h.response('Internal server error').code(500);
-  }
-};
 
 const getManageMenuById = async (request, h) => {
   try {
     const { id } = request.params;
-
     const manageMenu = await prisma.manageMenu.findUnique({
-      where: { id: parseInt(id) },
-      include: {
-        parent: true, // Include the parent ManageMenu
-        children: true, // Include the child ManageMenus
-      },
+      where: {
+        id: parseInt(id)
+      }
     });
 
     if (!manageMenu) {
       return h.response({ error: 'Manage menu not found' }).code(404);
     }
 
-    return h.response({ data: manageMenu });
+    return h.response({ manageMenu }).code(200);
+  } catch (error) {
+    console.error('Error:', error);
+    return h.response('Internal server error').code(500);
+  }
+};
+const getAllManageMenus = async (request, h) => {
+  try {
+    const manageMenus = await prisma.manageMenu.findMany();
+    return h.response({ manageMenus }).code(200);
   } catch (error) {
     console.error('Error:', error);
     return h.response('Internal server error').code(500);
@@ -558,6 +619,7 @@ module.exports = {
   updateManageMenu,
   deleteManageMenu,
   getManageMenuById,
+  getAllManageMenus,
   helloWord,
   getParameter,
   getQueryString,
@@ -571,8 +633,6 @@ module.exports = {
   updateSinglePageById,
   deleteSinglePageById,
   createPageType,
-  usersList,
-  createUser,
   createSinglePages,
   getPageTypeById,
   deletePageTypeById,
@@ -581,5 +641,8 @@ module.exports = {
   getTagById,
   updateTagById,
   deleteTagById,
-
+  getAllUsers,
+  getUserById,
+  updateUser,
+  deleteUser,
 };

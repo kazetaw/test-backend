@@ -33,13 +33,28 @@ const userRoutes = [
   },
   {
     method: "POST",
-    path: "/logins",
-    handler: API.getUsers,
+    path: "/register",
+    handler: API.userRegister,
+  },
+  {
+    method: "GET",
+    path: "/users",
+    handler: API.getAllUsers
+  },
+  {
+    method: "GET",
+    path: "/users/{id}",
+    handler: API.getUserById
   },
   {
     method: "POST",
-    path: "/register",
-    handler: API.userRegister,
+    path: "/users/{id}",
+    handler: API.updateUser 
+  },
+  {
+    method: "DELETE",
+    path: "/users/{id}",
+    handler: API.deleteUser 
   },
   {
     method: "GET",
@@ -67,16 +82,6 @@ const userRoutes = [
     handler: API.updatePageTypeById,
   },
   {
-    method: "GET",
-    path: "/userlist",
-    handler: API.usersList,
-  },
-  {
-    method: "POST",
-    path: "/create",
-    handler: API.createUser,
-  },
-  {
     method: "POST",
     path: "/pagetype",
     handler: API.createPageType,
@@ -98,17 +103,17 @@ const userRoutes = [
   },
   {
     method: "POST",
-    path: "/create-tag",
+    path: "/tag",
     handler: API.createTag,
   },
   {
     method: "GET",
-    path: "/get-tag/{id}",
+    path: "/tag/{id}",
     handler: API.getTagById,
   },
   {
     method: "POST",
-    path: "/update-tag/{id}",
+    path: "/tag/{id}",
     handler: API.updateTagById,
   },
   {
@@ -132,8 +137,13 @@ const userRoutes = [
     handler: API.getManageMenuById,
   },
   {
+    method: "GET",
+    path: "/manage-menu",
+    handler: API.getAllManageMenus,
+  },
+  {
     method: "DELETE",
-    path: "/delete-tag/{id}",
+    path: "/tag/{id}",
     handler: API.deleteTagById,
   },
 ];
