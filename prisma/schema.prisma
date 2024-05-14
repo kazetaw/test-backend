@@ -6,21 +6,25 @@ datasource db {
 generator client {
   provider = "prisma-client-js"
 }
+
 model User {
-  id        Int     @id @default(autoincrement())
+  id        Int    @id @default(autoincrement())
   firstName String
   lastName  String
-  email String @unique
-  login Login?
+  email     String @unique
+  login     Login?
+
   @@map("users")
 }
+
 model Login {
   id       Int    @id @default(autoincrement())
   username String
   password String
   // Add a foreign key to User
-  user   User   @relation(fields: [userId], references: [id])
-  userId Int    @unique
+  user     User   @relation(fields: [userId], references: [id])
+  userId   Int    @unique
+
   @@map("login")
 }
 
@@ -30,6 +34,7 @@ model PageType {
   createdAt DateTime     @default(now())
   updatedAt DateTime     @updatedAt
   pages     SinglePage[]
+
   @@map("page_type")
 }
 
@@ -45,26 +50,29 @@ model SinglePage {
   isActive        Boolean
   type            PageType? @relation(fields: [typeId], references: [id])
   typeId          Int?
+  tag             Json
+
   @@map("single_pages")
 }
 
 model Tag {
   id      Int    @id @default(autoincrement())
   tagName String
+
   @@map("tag")
 }
 
 model ManageMenu {
-  id       Int         @id @default(autoincrement())
-  menuName String
-  path     String
-  isActive Boolean
-  parent   ManageMenu? @relation("ManageMenuChildren", fields: [parentId], references: [id])
-  icons String
+  id        Int         @id @default(autoincrement())
+  menuName  String
+  path      String
+  isActive  Boolean
+  parent    ManageMenu? @relation("ManageMenuChildren", fields: [parentId], references: [id])
+  icons     String
   // Add a foreign key to itself
   parentId  Int?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
 
   children ManageMenu[] @relation("ManageMenuChildren")
 
