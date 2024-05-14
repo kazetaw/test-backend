@@ -6,7 +6,12 @@ const userRoutes = require('./src/api/api.route')
 const init = async () => {
   const server = Hapi.server({
     port: 8000,
-    host: 'localhost'
+    host: 'localhost',
+    routes: {
+      cors: {
+          origin: ['http://localhost:3000'] // Specify the origin(s) you want to allow
+      }
+  }
   });
 
   // Define routes
