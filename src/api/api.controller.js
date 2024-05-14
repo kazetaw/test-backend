@@ -115,11 +115,23 @@ const userLogin = async (request, h) => {
     });
 
     if (!user) {
-      return h.response({ error: 'Invalid credentials' }).code(401);
+      // return h.response({ error: 'Invalid credentials' }).code(401);
+      return {
+        statusCode: 400,
+        result: {
+          user
+        },
+      };
     }
 
     // Return the user information or generate a token for authentication
-    return h.response({ message: 'Login successful', user });
+    // return h.response({ message: 'Login successful', user });
+    return {
+      statusCode: 200,
+      result: {
+        user
+      },
+    };
   } catch (error) {
     console.error('Error:', error);
     return h.response('Internal server error').code(500);
