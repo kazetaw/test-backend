@@ -68,7 +68,7 @@ const userRoutes = [
   },
   {
     method: "POST",
-    path: "/singlepages",
+    path: "/singlepage",
     handler: API.createSinglePages
   },
   {

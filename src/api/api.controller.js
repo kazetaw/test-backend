@@ -175,10 +175,9 @@ const getUsers = async (request, res) => {
   }
 };
 
-const createSinglePage = async (request, res) => {
+const createSinglePage = async (request, h) => {
   try {
-    const { title, content, typeId, titleImages, pageLink, isActive } =
-      request.payload;
+    const { title, content, typeId, titleImages, pageLink, isActive, tags } = request.payload;
 
     const newSinglePage = await prisma.singlePage.create({
       data: {
@@ -188,16 +187,35 @@ const createSinglePage = async (request, res) => {
         titleImages,
         pageLink,
         isActive,
+        tags: {
+          connectOrCreate: tags.map(tag => ({
+            where: { tagName: tag.tagName },
+            create: { tagName: tag.tagName },
+          })),
+        },
       },
     });
+    console.log("🚀 ~ createSinglePage ~ newSinglePage:", newSinglePage)
 
-    return {
+    return h.response({
       statusCode: 201,
       result: {
         message: "Single page created successfully",
         data: newSinglePage,
       },
-    };
+    }).code(201);
+  } catch (error) {
+    console.error("Error:", error);
+    return Boom.badImplementation(error);
+  }
+};
+
+const getAllSinglePages = async (request, h) => {
+  try {
+    const singlePages = await prisma.singlePage.findMany({
+      include: { tags: true },
+    });
+    return singlePages;
   } catch (error) {
     console.error("Error:", error);
     return Boom.badImplementation(error);
@@ -303,6 +321,7 @@ const createPageType = async (request, res) => {
         typeName,
       },
     });
+    console.log("🚀 ~ createPageType ~ newPageType:", newPageType)
 
     return {
       statusCode: 201,
@@ -661,6 +680,7 @@ const createSinglePages = async (request, res) => {
         timestampCreate: new Date(),
       },
     });
+    console.log("🚀 ~ createSinglePages ~ newSinglePage:", newSinglePage)
 
     return {
       statusCode: 201,
@@ -823,11 +843,11 @@ module.exports = {
   getUsers,
   userRegister,
   createSinglePage,
+  createSinglePages,
   getSinglePageById,
   updateSinglePageById,
   deleteSinglePageById,
   createPageType,
-  createSinglePages,
   getPageTypeById,
   deletePageTypeById,
   updatePageTypeById,
