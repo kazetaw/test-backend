@@ -415,6 +415,7 @@ const createTag = async (request, res) => {
         tagName,
       },
     });
+    console.log("🚀 ~ createTag ~ newTag:", newTag)
 
     return {
       statusCode: 201,
