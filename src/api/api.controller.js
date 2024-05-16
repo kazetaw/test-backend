@@ -5,7 +5,7 @@ const { PrismaClient } = require("@prisma/client");
 
 // Initialize Prisma Client
 const prisma = new PrismaClient();
-const md5 = require('md5'); // เพิ่มการนำเข้าไลบรารี md5
+const md5 = require("md5"); // เพิ่มการนำเข้าไลบรารี md5
 
 const helloWord = async (request, res) => {
   try {
@@ -119,7 +119,7 @@ const userLogin = async (request, h) => {
       return {
         statusCode: 400,
         result: {
-          user
+          user,
         },
       };
     }
@@ -129,46 +129,56 @@ const userLogin = async (request, h) => {
     return {
       statusCode: 200,
       result: {
-        user
+        user,
       },
     };
   } catch (error) {
-    console.error('Error:', error);
-    return h.response('Internal server error').code(500);
-  }
+    console.error("Error:", error);
+    return Boom.badImplementation(error);  }
 };
 
-const getUsers = async (request, response) => {
+const getUsers = async (request, res) => {
   try {
     const { username, password } = request.payload;
 
-    // ตรวจสอบว่า username ซ้ำหรือไม่
+    // Check if the username already exists
     const existingUser = await prisma.user.findUnique({
       where: {
-        username: username
-      }
+        username: username,
+      },
     });
 
     if (existingUser) {
-      return Boom.badRequest('Username already exists');
+      return {
+        statusCode: 400,
+        error: "Username already exists",
+      };
     }
+
     const newUser = await prisma.user.create({
       data: {
         username: username,
-        password: password
-      }
+        password: password,
+      },
     });
 
-    return { message: 'User registered successfully', user: newUser };
+    return {
+      statusCode: 201,
+      result: {
+        message: "User registered successfully",
+        user: newUser,
+      },
+    };
   } catch (error) {
-    console.error('Error:', error);
-    return Boom.badImplementation('Internal server error');
+    console.error("Error:", error);
+    return Boom.badImplementation(error);
   }
 };
 
-const createSinglePage = async (request, h) => {
+const createSinglePage = async (request, res) => {
   try {
-    const { title, content, typeId, titleImages, pageLink, isActive } = request.payload;
+    const { title, content, typeId, titleImages, pageLink, isActive } =
+      request.payload;
 
     const newSinglePage = await prisma.singlePage.create({
       data: {
@@ -181,13 +191,20 @@ const createSinglePage = async (request, h) => {
       },
     });
 
-    return h.response({ message: 'Single page created successfully', data: newSinglePage }).code(201);
+    return {
+      statusCode: 201,
+      result: {
+        message: "Single page created successfully",
+        data: newSinglePage,
+      },
+    };
   } catch (error) {
-    console.error('Error:', error);
-    return h.response('Internal server error').code(500);
+    console.error("Error:", error);
+    return Boom.badImplementation(error);
   }
 };
-const getSinglePageById = async (request, h) => {
+
+const getSinglePageById = async (request, res) => {
   try {
     const singlePages = await prisma.singlePage.findMany({
       include: {
@@ -195,17 +212,23 @@ const getSinglePageById = async (request, h) => {
       },
     });
 
-    return h.response({ data: singlePages });
+    return {
+      statusCode: 200,
+      result: {
+        data: singlePages,
+      },
+    };
   } catch (error) {
-    console.error('Error:', error);
-    return h.response('Internal server error').code(500);
+    console.error("Error:", error);
+    return Boom.badImplementation(error);
   }
 };
 
-const updateSinglePageById = async (request, h) => {
+const updateSinglePageById = async (request, res) => {
   try {
     const { id } = request.params;
-    const { title, content, typeId, titleImages, pageLink, isActive } = request.payload;
+    const { title, content, typeId, titleImages, pageLink, isActive } =
+      request.payload;
 
     // Check if the SinglePage record exists
     const existingSinglePage = await prisma.singlePage.findUnique({
@@ -213,7 +236,10 @@ const updateSinglePageById = async (request, h) => {
     });
 
     if (!existingSinglePage) {
-      return h.response({ error: 'Single page not found' }).code(404);
+      return {
+        statusCode: 404,
+        error: "Single page not found",
+      };
     }
 
     const updatedSinglePage = await prisma.singlePage.update({
@@ -228,15 +254,20 @@ const updateSinglePageById = async (request, h) => {
       },
     });
 
-    return h.response({ message: 'Single page updated successfully', data: updatedSinglePage });
+    return {
+      statusCode: 200,
+      result: {
+        message: "Single page updated successfully",
+        data: updatedSinglePage,
+      },
+    };
   } catch (error) {
-    console.error('Error:', error);
-    return h.response('Internal server error').code(500);
+    console.error("Error:", error);
+    return Boom.badImplementation(error);
   }
 };
 
-
-const deleteSinglePageById = async (request, h) => {
+const deleteSinglePageById = async (request, res) => {
   try {
     const { id } = request.params;
 
@@ -245,50 +276,73 @@ const deleteSinglePageById = async (request, h) => {
     });
 
     if (!deletedSinglePage) {
-      return h.response({ error: 'Single page not found' }).code(404);
+      return {
+        statusCode: 404,
+        error: "Single page not found",
+      };
     }
 
-    return h.response({ message: 'Single page deleted successfully' });
+    return {
+      statusCode: 200,
+      result: {
+        message: "Single page deleted successfully",
+      },
+    };
   } catch (error) {
-    console.error('Error:', error);
-    return h.response('Internal server error').code(500);
+    console.error("Error:", error);
+    return Boom.badImplementation(error);
   }
 };
-const createPageType = async (request, h) => {
+
+const createPageType = async (request, res) => {
   try {
     const { typeName } = request.payload;
 
     const newPageType = await prisma.pageType.create({
       data: {
-        typeName
-      }
+        typeName,
+      },
     });
 
-    return h.response({ message: 'PageType created successfully', data: newPageType }).code(201);
+    return {
+      statusCode: 201,
+      result: {
+        message: "PageType created successfully",
+        data: newPageType,
+      },
+    };
   } catch (error) {
-    console.error('Error:', error);
-    return h.response('Internal server error').code(500);
+    console.error("Error:", error);
+    return Boom.badImplementation(error);
   }
 };
-const getPageTypeById = async (request, h) => {
+
+const getPageTypeById = async (request, res) => {
   try {
     const { id } = request.params;
 
     const pageType = await prisma.pageType.findUnique({
-      where: { id: parseInt(id) }
+      where: { id: parseInt(id) },
     });
 
     if (!pageType) {
-      return h.response('PageType not found').code(404);
+      return {
+        statusCode: 404,
+        error: "PageType not found",
+      };
     }
 
-    return h.response(pageType).code(200);
+    return {
+      statusCode: 200,
+      result: pageType,
+    };
   } catch (error) {
-    console.error('Error:', error);
-    return h.response('Internal server error').code(500);
+    console.error("Error:", error);
+    return Boom.badImplementation(error);
   }
 };
-const updatePageTypeById = async (request, h) => {
+
+const updatePageTypeById = async (request, res) => {
   try {
     const { id } = request.params;
     const { typeName } = request.payload;
@@ -296,65 +350,92 @@ const updatePageTypeById = async (request, h) => {
     const updatedPageType = await prisma.pageType.update({
       where: { id: parseInt(id) },
       data: {
-        typeName
-      }
+        typeName,
+      },
     });
 
-    return h.response({ message: 'PageType updated successfully', data: updatedPageType }).code(200);
+    return {
+      statusCode: 200,
+      result: {
+        message: "PageType updated successfully",
+        data: updatedPageType,
+      },
+    };
   } catch (error) {
-    console.error('Error:', error);
-    return h.response('Internal server error').code(500);
+    console.error("Error:", error);
+    return Boom.badImplementation(error);
   }
 };
-const deletePageTypeById = async (request, h) => {
+
+const deletePageTypeById = async (request, res) => {
   try {
     const { id } = request.params;
 
     await prisma.pageType.delete({
-      where: { id: parseInt(id) }
+      where: { id: parseInt(id) },
     });
 
-    return h.response({ message: 'PageType deleted successfully' }).code(200);
+    return {
+      statusCode: 200,
+      result: {
+        message: "PageType deleted successfully",
+      },
+    };
   } catch (error) {
-    console.error('Error:', error);
-    return h.response('Internal server error').code(500);
+    console.error("Error:", error);
+    return Boom.badImplementation(error);
   }
 };
-const createTag = async (request, h) => {
+
+const createTag = async (request, res) => {
   try {
     const { tagName } = request.payload;
 
     const newTag = await prisma.tag.create({
       data: {
-        tagName
-      }
+        tagName,
+      },
     });
 
-    return h.response({ message: 'Tag created successfully', data: newTag }).code(201);
+    return {
+      statusCode: 201,
+      result: {
+        message: "Tag created successfully",
+        data: newTag,
+      },
+    };
   } catch (error) {
-    console.error('Error:', error);
-    return h.response('Internal server error').code(500);
+    console.error("Error:", error);
+    return Boom.badImplementation(error);
   }
 };
-const getTagById = async (request, h) => {
+
+const getTagById = async (request, res) => {
   try {
     const { id } = request.params;
 
     const tag = await prisma.tag.findUnique({
-      where: { id: parseInt(id) }
+      where: { id: parseInt(id) },
     });
 
     if (!tag) {
-      return h.response('Tag not found').code(404);
+      return {
+        statusCode: 404,
+        error: "Tag not found",
+      };
     }
 
-    return h.response(tag).code(200);
+    return {
+      statusCode: 200,
+      result: tag,
+    };
   } catch (error) {
-    console.error('Error:', error);
-    return h.response('Internal server error').code(500);
+    console.error("Error:", error);
+    return Boom.badImplementation(error);
   }
 };
-const updateTagById = async (request, h) => {
+
+const updateTagById = async (request, res) => {
   try {
     const { id } = request.params;
     const { tagName } = request.payload;
@@ -362,44 +443,60 @@ const updateTagById = async (request, h) => {
     const updatedTag = await prisma.tag.update({
       where: { id: parseInt(id) },
       data: {
-        tagName
-      }
+        tagName,
+      },
     });
 
-    return h.response({ message: 'Tag updated successfully', data: updatedTag }).code(200);
+    return {
+      statusCode: 200,
+      result: {
+        message: "Tag updated successfully",
+        data: updatedTag,
+      },
+    };
   } catch (error) {
-    console.error('Error:', error);
-    return h.response('Internal server error').code(500);
+    console.error("Error:", error);
+    return Boom.badImplementation(error);
   }
 };
-const deleteTagById = async (request, h) => {
+
+const deleteTagById = async (request, res) => {
   try {
     const { id } = request.params;
 
     await prisma.tag.delete({
-      where: { id: parseInt(id) }
+      where: { id: parseInt(id) },
     });
 
-    return h.response({ message: 'Tag deleted successfully' }).code(200);
+    return {
+      statusCode: 200,
+      result: {
+        message: "Tag deleted successfully",
+      },
+    };
   } catch (error) {
-    console.error('Error:', error);
-    return h.response('Internal server error').code(500);
+    console.error("Error:", error);
+    return Boom.badImplementation(error);
   }
 };
-const userRegister = async (request, h) => {
+
+const userRegister = async (request, res) => {
   try {
     const { firstName, lastName, email, username, password } = request.payload;
-    const hashedPassword = md5(password); // เข้ารหัสรหัสผ่านเป็น MD5
+    const hashedPassword = md5(password); // Hash the password using MD5
 
     // Check if the email already exists
     const existingUser = await prisma.user.findFirst({
       where: {
-        email: email
-      }
+        email: email,
+      },
     });
 
     if (existingUser) {
-      return h.response({ error: 'Email already exists' }).code(400);
+      return {
+        statusCode: 400,
+        error: "Email already exists",
+      };
     }
 
     // Create new user with login information
@@ -411,57 +508,79 @@ const userRegister = async (request, h) => {
         login: {
           create: {
             username,
-            password: hashedPassword // ใช้รหัสผ่านที่เข้ารหัส MD5
-          }
-        }
+            password: hashedPassword, // Use the hashed password
+          },
+        },
       },
       include: {
-        login: true
-      }
+        login: true,
+      },
     });
 
-    return h.response({ message: 'User registered successfully', user: newUser }).code(201);
+    return {
+      statusCode: 201,
+      result: {
+        message: "User registered successfully",
+        user: newUser,
+      },
+    };
   } catch (error) {
-    console.error('Error:', error);
-    return h.response('Internal server error').code(500);
+    console.error("Error:", error);
+    return Boom.badImplementation(error);
   }
 };
-const getAllUsers = async (request, h) => {
+
+const getAllUsers = async (request, res) => {
   try {
     const users = await prisma.user.findMany();
-    return h.response({ users }).code(200);
+    return {
+      statusCode: 200,
+      result: {
+        users,
+      },
+    };
   } catch (error) {
-    console.error('Error:', error);
-    return h.response('Internal server error').code(500);
+    console.error("Error:", error);
+    return Boom.badImplementation(error);
   }
 };
-const getUserById = async (request, h) => {
+
+const getUserById = async (request, res) => {
   try {
     const { id } = request.params;
     const user = await prisma.user.findUnique({
       where: {
-        id: parseInt(id)
-      }
+        id: parseInt(id),
+      },
     });
 
     if (!user) {
-      return h.response({ error: 'User not found' }).code(404);
+      return {
+        statusCode: 404,
+        error: "User not found",
+      };
     }
 
-    return h.response({ user }).code(200);
+    return {
+      statusCode: 200,
+      result: {
+        user,
+      },
+    };
   } catch (error) {
-    console.error('Error:', error);
-    return h.response('Internal server error').code(500);
+    console.error("Error:", error);
+    return Boom.badImplementation(error);
   }
 };
-const updateUser = async (request, h) => {
+
+const updateUser = async (request, res) => {
   try {
     const { id } = request.params;
     const { firstName, lastName, email, username } = request.payload;
 
     const updatedUser = await prisma.user.update({
       where: {
-        id: parseInt(id)
+        id: parseInt(id),
       },
       data: {
         firstName,
@@ -469,40 +588,55 @@ const updateUser = async (request, h) => {
         email,
         login: {
           update: {
-            username
-          }
-        }
+            username,
+          },
+        },
       },
       include: {
-        login: true
-      }
+        login: true,
+      },
     });
 
-    return h.response({ message: 'User updated successfully', user: updatedUser }).code(200);
+    return {
+      statusCode: 200,
+      result: {
+        message: "User updated successfully",
+        user: updatedUser,
+      },
+    };
   } catch (error) {
-    console.error('Error:', error);
-    return h.response('Internal server error').code(500);
+    console.error("Error:", error);
+    return Boom.badImplementation(error);
   }
 };
-const deleteUser = async (request, h) => {
+
+const deleteUser = async (request, res) => {
   try {
     const { id } = request.params;
 
     const deletedUser = await prisma.user.delete({
       where: {
-        id: parseInt(id)
-      }
+        id: parseInt(id),
+      },
     });
 
-    return h.response({ message: 'User deleted successfully', user: deletedUser }).code(200);
+    return {
+      statusCode: 200,
+      result: {
+        message: "User deleted successfully",
+        user: deletedUser,
+      },
+    };
   } catch (error) {
-    console.error('Error:', error);
-    return h.response('Internal server error').code(500);
+    console.error("Error:", error);
+    return Boom.badImplementation(error);
   }
 };
-const createSinglePages = async (request, h) => {
+
+const createSinglePages = async (request, res) => {
   try {
-    const { title, content, typeId, titleImages, pageLink, isActive } = request.payload;
+    const { title, content, typeId, titleImages, pageLink, isActive } =
+      request.payload;
 
     // Check if the provided typeId exists in the PageType table
     const existingPageType = await prisma.pageType.findUnique({
@@ -510,7 +644,10 @@ const createSinglePages = async (request, h) => {
     });
 
     if (!existingPageType) {
-      return h.response({ error: 'Invalid typeId. PageType not found.' }).code(400);
+      return {
+        statusCode: 400,
+        error: "Invalid typeId. PageType not found.",
+      };
     }
 
     const newSinglePage = await prisma.singlePage.create({
@@ -525,15 +662,22 @@ const createSinglePages = async (request, h) => {
       },
     });
 
-    return h.response({ message: 'Single page created successfully', data: newSinglePage }).code(201);
+    return {
+      statusCode: 201,
+      result: {
+        message: "Single page created successfully",
+        data: newSinglePage,
+      },
+    };
   } catch (error) {
-    console.error('Error:', error);
-    return h.response('Internal server error').code(500);
+    console.error("Error:", error);
+    return Boom.badImplementation(error);
   }
 };
-const createManageMenu = async (request, h) => {
+
+const createManageMenu = async (request, res) => {
   try {
-    const { menuName, path, isActive, parentId,icons } = request.payload;
+    const { menuName, path, isActive, parentId, icons } = request.payload;
 
     const newManageMenu = await prisma.manageMenu.create({
       data: {
@@ -545,16 +689,23 @@ const createManageMenu = async (request, h) => {
       },
     });
 
-    return h.response({ message: 'Manage menu created successfully', data: newManageMenu }).code(201);
+    return {
+      statusCode: 201,
+      result: {
+        message: "Manage menu created successfully",
+        data: newManageMenu,
+      },
+    };
   } catch (error) {
-    console.error('Error:', error);
-    return h.response('Internal server error').code(500);
+    console.error("Error:", error);
+    return Boom.badImplementation(error);
   }
 };
-const updateManageMenu = async (request, h) => {
+
+const updateManageMenu = async (request, res) => {
   try {
     const { id } = request.params;
-    const { menuName, path, isActive, parentId,icons } = request.payload;
+    const { menuName, path, isActive, parentId, icons } = request.payload;
 
     const updatedManageMenu = await prisma.manageMenu.update({
       where: { id: parseInt(id) },
@@ -568,16 +719,26 @@ const updateManageMenu = async (request, h) => {
     });
 
     if (!updatedManageMenu) {
-      return h.response({ error: 'Manage menu not found' }).code(404);
+      return {
+        statusCode: 404,
+        error: "Manage menu not found",
+      };
     }
 
-    return h.response({ message: 'Manage menu updated successfully', data: updatedManageMenu });
+    return {
+      statusCode: 200,
+      result: {
+        message: "Manage menu updated successfully",
+        data: updatedManageMenu,
+      },
+    };
   } catch (error) {
-    console.error('Error:', error);
-    return h.response('Internal server error').code(500);
+    console.error("Error:", error);
+    return Boom.badImplementation(error);
   }
 };
-const deleteManageMenu = async (request, h) => {
+
+const deleteManageMenu = async (request, res) => {
   try {
     const { id } = request.params;
 
@@ -586,45 +747,66 @@ const deleteManageMenu = async (request, h) => {
     });
 
     if (!deletedManageMenu) {
-      return h.response({ error: 'Manage menu not found' }).code(404);
+      return {
+        statusCode: 404,
+        error: "Manage menu not found",
+      };
     }
 
-    return h.response({ message: 'Manage menu deleted successfully' });
+    return {
+      statusCode: 200,
+      result: {
+        message: "Manage menu deleted successfully",
+      },
+    };
   } catch (error) {
-    console.error('Error:', error);
-    return h.response('Internal server error').code(500);
+    console.error("Error:", error);
+    return Boom.badImplementation(error);
   }
 };
 
-const getManageMenuById = async (request, h) => {
+const getManageMenuById = async (request, res) => {
   try {
     const { id } = request.params;
     const manageMenu = await prisma.manageMenu.findUnique({
       where: {
-        id: parseInt(id)
-      }
+        id: parseInt(id),
+      },
     });
 
     if (!manageMenu) {
-      return h.response({ error: 'Manage menu not found' }).code(404);
+      return {
+        statusCode: 404,
+        error: "Manage menu not found",
+      };
     }
 
-    return h.response({ manageMenu }).code(200);
+    return {
+      statusCode: 200,
+      result: {
+        manageMenu,
+      },
+    };
   } catch (error) {
-    console.error('Error:', error);
-    return h.response('Internal server error').code(500);
-  }
-};
-const getAllManageMenus = async (request, h) => {
-  try {
-    const manageMenus = await prisma.manageMenu.findMany();
-    return h.response({ manageMenus }).code(200);
-  } catch (error) {
-    console.error('Error:', error);
-    return h.response('Internal server error').code(500);
+    console.error("Error:", error);
+    return Boom.badImplementation(error);
   }
 };
 
+const getAllManageMenus = async (request, res) => {
+  try {
+    const manageMenus = await prisma.manageMenu.findMany();
+    return {
+      statusCode: 200,
+      result: {
+        manageMenus,
+      },
+    };
+  } catch (error) {
+    console.error("Error:", error);
+    return Boom.badImplementation(error);
+  }
+};
 
 module.exports = {
   createManageMenu,

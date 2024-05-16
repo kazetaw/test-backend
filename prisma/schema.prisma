@@ -51,14 +51,12 @@ model SinglePage {
   type            PageType? @relation(fields: [typeId], references: [id])
   typeId          Int?
   tag             Json
-
   @@map("single_pages")
 }
 
 model Tag {
   id      Int    @id @default(autoincrement())
   tagName String
-
   @@map("tag")
 }
 
