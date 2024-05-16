@@ -653,10 +653,9 @@ const deleteUser = async (request, res) => {
   }
 };
 
-const createSinglePages = async (request, res) => {
+const createSinglePages = async (request, h) => {
   try {
-    const { title, content, typeId, titleImages, pageLink, isActive,tagName } =
-      request.payload;
+    const { title, content, typeId, titleImages, pageLink, isActive, tag } = request.payload;
 
     // Check if the provided typeId exists in the PageType table
     const existingPageType = await prisma.pageType.findUnique({
@@ -664,10 +663,7 @@ const createSinglePages = async (request, res) => {
     });
 
     if (!existingPageType) {
-      return {
-        statusCode: 400,
-        error: "Invalid typeId. PageType not found.",
-      };
+      return Boom.badRequest('Invalid typeId. PageType not found.');
     }
 
     const newSinglePage = await prisma.singlePage.create({
@@ -678,22 +674,21 @@ const createSinglePages = async (request, res) => {
         titleImages,
         pageLink,
         isActive,
-        tagName,
         timestampCreate: new Date(),
+        tag: tag || null, // Provide tag or set it to null
       },
     });
-    console.log("🚀 ~ createSinglePages ~ newSinglePage:", newSinglePage)
 
-    return {
-      statusCode: 201,
-      result: {
-        message: "Single page created successfully",
-        data: newSinglePage,
-      },
-    };
+    console.log('🚀 ~ createSinglePages ~ newSinglePage:', newSinglePage);
+
+    return h.response({
+      message: 'Single page created successfully',
+      data: newSinglePage,
+    }).code(201);
   } catch (error) {
-    console.error("Error:", error);
-    return Boom.badImplementation(error);
+    console.error('Error:', error);
+    // Use Boom to create a proper error response
+    return Boom.badImplementation(error.message);
   }
 };
 
