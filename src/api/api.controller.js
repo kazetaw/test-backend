@@ -655,7 +655,7 @@ const deleteUser = async (request, res) => {
 
 const createSinglePages = async (request, res) => {
   try {
-    const { title, content, typeId, titleImages, pageLink, isActive } =
+    const { title, content, typeId, titleImages, pageLink, isActive,tag } =
       request.payload;
 
     // Check if the provided typeId exists in the PageType table
@@ -678,6 +678,7 @@ const createSinglePages = async (request, res) => {
         titleImages,
         pageLink,
         isActive,
+        tag,
         timestampCreate: new Date(),
       },
     });
