@@ -46,11 +46,11 @@ model SinglePage {
   updatedAt       DateTime  @updatedAt
   timestampCreate DateTime
   titleImages     String
-  pageLink        String
+  pageLink        String?
   isActive        Boolean
   type            PageType? @relation(fields: [typeId], references: [id])
   typeId          Int?
-  tag             Json
+  tag             Json?
   @@map("single_pages")
 }
 
@@ -63,7 +63,7 @@ model Tag {
 model ManageMenu {
   id        Int         @id @default(autoincrement())
   menuName  String
-  path      String
+  path      String?
   isActive  Boolean
   parent    ManageMenu? @relation("ManageMenuChildren", fields: [parentId], references: [id])
   icons     String
