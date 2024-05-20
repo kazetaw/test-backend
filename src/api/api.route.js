@@ -62,6 +62,11 @@ const userRoutes = [
     handler: API.getSinglePageById,
   },
   {
+    method: "GET",
+    path: "/singlepage",
+    handler: API.getAllSinglePages
+  },
+  {
     method: "POST",
     path: "/singlepage/{id}",
     handler: API.updateSinglePageById

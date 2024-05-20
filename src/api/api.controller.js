@@ -213,32 +213,36 @@ const createSinglePage = async (request, h) => {
 const getAllSinglePages = async (request, h) => {
   try {
     const singlePages = await prisma.singlePage.findMany({
-      include: { tags: true },
-    });
-    return singlePages;
-  } catch (error) {
-    console.error("Error:", error);
-    return Boom.badImplementation(error);
-  }
-};
-
-const getSinglePageById = async (request, res) => {
-  try {
-    const singlePages = await prisma.singlePage.findMany({
       include: {
         type: true, // Include the related PageType
       },
     });
 
-    return {
-      statusCode: 200,
-      result: {
-        data: singlePages,
-      },
-    };
+    return h.response({ data: singlePages });
   } catch (error) {
-    console.error("Error:", error);
-    return Boom.badImplementation(error);
+    console.error('Error:', error);
+    return h.response('Internal server error').code(500);
+  }
+};
+
+const getSinglePageById = async (request, h) => {
+  try {
+    const { id } = request.params;
+    const singlePage = await prisma.singlePage.findUnique({
+      where: { id: parseInt(id) },
+      include: {
+        type: true, // Include the related PageType
+      },
+    });
+
+    if (!singlePage) {
+      return h.response({ error: 'Single page not found' }).code(404);
+    }
+
+    return h.response({ data: singlePage });
+  } catch (error) {
+    console.error('Error:', error);
+    return h.response('Internal server error').code(500);
   }
 };
 
@@ -854,6 +858,7 @@ module.exports = {
   deleteTagById,
   getAllUsers,
   getUserById,
+  getAllSinglePages,
   updateUser,
   deleteUser,
 };
