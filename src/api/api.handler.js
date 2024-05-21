@@ -3,7 +3,7 @@ const mergeName = (firstName, lastName, birthDate) => {
     const birth = new Date(birthDate); // แปลง string เป็น Date
     let age = today.getFullYear() - birth.getFullYear();
 
-    // ตรวจสอบเดือนเกิด และวันเกิดว่าผ่านมาหรือยัง?
+    // ตรวจสอบเดือนเกิด และวันเกิดว่าผ่านมาหรือยัง
     if (today.getMonth() < birth.getMonth() ||
         (today.getMonth() === birth.getMonth() && today.getDate() < birth.getDate())) {
         age--;
