@@ -170,6 +170,11 @@ const userRoutes = [
     path: '/uploads',
     handler: API.getAllFiles
   },
+  {
+    method: 'GET',
+    path: '/uploads/{filename}',
+    handler: API.getFiles
+  }
 ];
 
 module.exports = userRoutes;
