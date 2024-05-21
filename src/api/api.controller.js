@@ -712,10 +712,10 @@ const createManageMenu = async (request, res) => {
     const newManageMenu = await prisma.manageMenu.create({
       data: {
         menuName,
-        pathMenu,
+        pathMenu:pathMenu || null,
         isActive,
         parentId,
-        icons,
+        icons:icons|| null,
       },
     });
 

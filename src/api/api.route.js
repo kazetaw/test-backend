@@ -49,22 +49,17 @@ const userRoutes = [
   {
     method: "POST",
     path: "/users/{id}",
-    handler: API.updateUser
+    handler: API.updateUser 
   },
   {
     method: "DELETE",
     path: "/users/{id}",
-    handler: API.deleteUser
+    handler: API.deleteUser 
   },
   {
     method: "GET",
     path: "/singlepage/{id}",
     handler: API.getSinglePageById,
-  },
-  {
-    method: "GET",
-    path: "/singlepage",
-    handler: API.getAllSinglePages
   },
   {
     method: "POST",
@@ -150,25 +145,6 @@ const userRoutes = [
     method: "DELETE",
     path: "/tag/{id}",
     handler: API.deleteTagById,
-  },
-
-  {
-    method: 'POST',
-    path: '/upload',
-    options: {
-      payload: {
-        allow: 'multipart/form-data',
-        multipart: true,
-        output: 'stream',
-        maxBytes: 5048576,
-      }
-    },
-    handler: API.uploadFiles
-  },
-  {
-    method: 'GET',
-    path: '/uploads',
-    handler: API.getAllFiles
   },
 ];
 
