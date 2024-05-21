@@ -146,7 +146,7 @@ const userRoutes = [
     path: "/tag/{id}",
     handler: API.deleteTagById,
   },
-<<<<<<< HEAD
+
 
   {
     method: 'POST',
@@ -171,8 +171,6 @@ const userRoutes = [
     path: '/uploads/{filename}',
     handler: API.getFiles
   }
-=======
->>>>>>> f2178cd11ee31cb437757166ca852b584d0958d8
 ];
 
 module.exports = userRoutes;

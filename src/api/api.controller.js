@@ -890,7 +890,6 @@ const getAllFiles = async (request, h) => {
     const files = await fs.promises.readdir(directoryPath);
     return h.response(files).code(200);
   } catch (err) {
-<<<<<<< HEAD
     console.error('Error reading directory:', err);
     return h.response('Failed to read files').code(500);
   }
@@ -905,10 +904,6 @@ const getFiles = (request, h) => {
     return h.file(file);
   } else {
     return h.response('File not found').code(404);
-=======
-    console.error("Error reading directory:", err);
-    return h.response("Failed to read files").code(500);
->>>>>>> f2178cd11ee31cb437757166ca852b584d0958d8
   }
 };
 
@@ -946,8 +941,5 @@ module.exports = {
   deleteUser,
   uploadFiles,
   getAllFiles,
-<<<<<<< HEAD
   getFiles
-=======
->>>>>>> f2178cd11ee31cb437757166ca852b584d0958d8
 };
