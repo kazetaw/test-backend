@@ -707,15 +707,15 @@ const createSinglePages = async (request, res) => {
 
 const createManageMenu = async (request, res) => {
   try {
-    const { menuName, pathMenu, isActive, parent, icons } = request.payload; // เปลี่ยนจาก parentId เป็น parent
+    const { menuName, pathMenu, isActive, parentId, icons } = request.payload;
 
     const newManageMenu = await prisma.manageMenu.create({
       data: {
         menuName,
+        pathMenu,
         isActive,
-        parent, // ใช้ parent แทน parentId
+        parentId,
         icons,
-        pathMenu: null, // ตั้งค่า pathMenu เป็น null หรือตามที่ต้องการ
       },
     });
 
