@@ -1,5 +1,6 @@
 // Import required modules
 const Hapi = require('@hapi/hapi');
+const inert = require('@hapi/inert');
 const userRoutes = require('./src/api/api.route')
 
 // Initialize Hapi server
@@ -14,6 +15,9 @@ const init = async () => {
   }
   });
 
+  await server.register(inert);
+
+  
   // Define routes
   server.route(userRoutes);
 

@@ -1,3 +1,4 @@
+const fs = require('fs');
 const Boom = require("@hapi/boom");
 const handler = require("./api.handler");
 const utils = require("../utils/utils-common");
@@ -213,32 +214,36 @@ const createSinglePage = async (request, h) => {
 const getAllSinglePages = async (request, h) => {
   try {
     const singlePages = await prisma.singlePage.findMany({
-      include: { tags: true },
-    });
-    return singlePages;
-  } catch (error) {
-    console.error("Error:", error);
-    return Boom.badImplementation(error);
-  }
-};
-
-const getSinglePageById = async (request, res) => {
-  try {
-    const singlePages = await prisma.singlePage.findMany({
       include: {
         type: true, // Include the related PageType
       },
     });
 
-    return {
-      statusCode: 200,
-      result: {
-        data: singlePages,
-      },
-    };
+    return h.response({ data: singlePages });
   } catch (error) {
-    console.error("Error:", error);
-    return Boom.badImplementation(error);
+    console.error('Error:', error);
+    return h.response('Internal server error').code(500);
+  }
+};
+
+const getSinglePageById = async (request, h) => {
+  try {
+    const { id } = request.params;
+    const singlePage = await prisma.singlePage.findUnique({
+      where: { id: parseInt(id) },
+      include: {
+        type: true, // Include the related PageType
+      },
+    });
+
+    if (!singlePage) {
+      return h.response({ error: 'Single page not found' }).code(404);
+    }
+
+    return h.response({ data: singlePage });
+  } catch (error) {
+    console.error('Error:', error);
+    return h.response('Internal server error').code(500);
   }
 };
 
@@ -830,6 +835,62 @@ const getAllManageMenus = async (request, res) => {
   }
 };
 
+const uploadFiles = async (request, h) => {
+  const data = request.payload;
+  if (data.files && data.files.length) {
+    const uploadPromises = data.files.map((file) => {
+      const filename = file.hapi.filename;
+      const destination = process.cwd() + "/uploads/" + filename;
+      const fileStream = fs.createWriteStream(destination);
+
+      return new Promise((resolve, reject) => {
+        file.on('error', (err) => {
+          console.error('Stream error in file', filename, err);
+          reject(`Error in file ${filename}`);
+        });
+        fileStream.on('error', (err) => {
+          console.error('Write error in file', filename, err);
+          reject(`Error writing file ${filename}`);
+        });
+        fileStream.on('finish', () => {
+          console.log(`File uploaded successfully at ${destination}`);
+          resolve(`File uploaded successfully at ${destination}`);
+        });
+        file.pipe(fileStream);
+      });
+    });
+
+    try {
+      const results = await Promise.all(uploadPromises);
+      return h.response({
+        message: "All files uploaded successfully",
+        files: results
+      }).code(201);
+    } catch (err) {
+      console.error('Error handling files', err);
+      return h.response({
+        message: "Error uploading one or more files",
+        error: err
+      }).code(500);
+    }
+  }
+  return h.response('Please upload one or more files').code(400);
+}
+
+
+
+const getAllFiles = async (request, h) => {
+  const directoryPath = process.cwd() + "/uploads/";
+
+  try {
+      const files = await fs.promises.readdir(directoryPath);
+      return h.response(files).code(200);
+  } catch (err) {
+      console.error('Error reading directory:', err);
+      return h.response('Failed to read files').code(500);
+  }
+};
+
 module.exports = {
   createManageMenu,
   updateManageMenu,
@@ -859,6 +920,9 @@ module.exports = {
   deleteTagById,
   getAllUsers,
   getUserById,
+  getAllSinglePages,
   updateUser,
   deleteUser,
+  uploadFiles,
+  getAllFiles
 };
