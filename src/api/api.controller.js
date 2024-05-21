@@ -1,4 +1,4 @@
-const fs = require('fs');
+const fs = require("fs");
 const Boom = require("@hapi/boom");
 const handler = require("./api.handler");
 const utils = require("../utils/utils-common");
@@ -179,7 +179,8 @@ const getUsers = async (request, res) => {
 
 const createSinglePage = async (request, h) => {
   try {
-    const { title, content, typeId, titleImages, pageLink, isActive, tags } = request.payload;
+    const { title, content, typeId, titleImages, pageLink, isActive, tags } =
+      request.payload;
 
     const newSinglePage = await prisma.singlePage.create({
       data: {
@@ -190,22 +191,24 @@ const createSinglePage = async (request, h) => {
         pageLink,
         isActive,
         tags: {
-          connectOrCreate: tags.map(tag => ({
+          connectOrCreate: tags.map((tag) => ({
             where: { tagName: tag.tagName },
             create: { tagName: tag.tagName },
           })),
         },
       },
     });
-    console.log("🚀 ~ createSinglePage ~ newSinglePage:", newSinglePage)
+    console.log("🚀 ~ createSinglePage ~ newSinglePage:", newSinglePage);
 
-    return h.response({
-      statusCode: 201,
-      result: {
-        message: "Single page created successfully",
-        data: newSinglePage,
-      },
-    }).code(201);
+    return h
+      .response({
+        statusCode: 201,
+        result: {
+          message: "Single page created successfully",
+          data: newSinglePage,
+        },
+      })
+      .code(201);
   } catch (error) {
     console.error("Error:", error);
     return Boom.badImplementation(error);
@@ -222,8 +225,8 @@ const getAllSinglePages = async (request, h) => {
 
     return h.response({ data: singlePages });
   } catch (error) {
-    console.error('Error:', error);
-    return h.response('Internal server error').code(500);
+    console.error("Error:", error);
+    return h.response("Internal server error").code(500);
   }
 };
 
@@ -238,13 +241,13 @@ const getSinglePageById = async (request, h) => {
     });
 
     if (!singlePage) {
-      return h.response({ error: 'Single page not found' }).code(404);
+      return h.response({ error: "Single page not found" }).code(404);
     }
 
     return h.response({ data: singlePage });
   } catch (error) {
-    console.error('Error:', error);
-    return h.response('Internal server error').code(500);
+    console.error("Error:", error);
+    return h.response("Internal server error").code(500);
   }
 };
 
@@ -327,7 +330,7 @@ const createPageType = async (request, res) => {
         typeName,
       },
     });
-    console.log("🚀 ~ createPageType ~ newPageType:", newPageType)
+    console.log("🚀 ~ createPageType ~ newPageType:", newPageType);
 
     return {
       statusCode: 201,
@@ -660,7 +663,8 @@ const deleteUser = async (request, res) => {
 
 const createSinglePages = async (request, res) => {
   try {
-    const { title, content, typeId, titleImages, isActive, tag } = request.payload;
+    const { title, content, typeId, titleImages, isActive, tag } =
+      request.payload;
 
     // Check if the provided typeId exists in the PageType table
     const existingPageType = await prisma.pageType.findUnique({
@@ -701,18 +705,17 @@ const createSinglePages = async (request, res) => {
   }
 };
 
-
 const createManageMenu = async (request, res) => {
   try {
-    const { menuName, pathMenu, isActive, parent, icons } = request.payload; // เปลี่ยนจาก parentId เป็น parent
+    const { menuName, pathMenu, isActive, parentId, icons } = request.payload;
 
     const newManageMenu = await prisma.manageMenu.create({
       data: {
         menuName,
+        pathMenu:pathMenu || null,
         isActive,
-        parent, // ใช้ parent แทน parentId
-        icons,
-        pathMenu: null, // ตั้งค่า pathMenu เป็น null หรือตามที่ต้องการ
+        parentId,
+        icons:icons|| null,
       },
     });
 
@@ -728,7 +731,6 @@ const createManageMenu = async (request, res) => {
     return Boom.badImplementation(error);
   }
 };
-
 
 const updateManageMenu = async (request, res) => {
   try {
@@ -835,7 +837,7 @@ const getAllManageMenus = async (request, res) => {
     return Boom.badImplementation(error);
   }
 };
-
+//data img
 const uploadFiles = async (request, h) => {
   const data = request.payload;
   if (data.files && data.files.length) {
@@ -845,15 +847,15 @@ const uploadFiles = async (request, h) => {
       const fileStream = fs.createWriteStream(destination);
 
       return new Promise((resolve, reject) => {
-        file.on('error', (err) => {
-          console.error('Stream error in file', filename, err);
+        file.on("error", (err) => {
+          console.error("Stream error in file", filename, err);
           reject(`Error in file ${filename}`);
         });
-        fileStream.on('error', (err) => {
-          console.error('Write error in file', filename, err);
+        fileStream.on("error", (err) => {
+          console.error("Write error in file", filename, err);
           reject(`Error writing file ${filename}`);
         });
-        fileStream.on('finish', () => {
+        fileStream.on("finish", () => {
           console.log(`File uploaded successfully at ${destination}`);
           resolve(`File uploaded successfully at ${destination}`);
         });
@@ -863,22 +865,24 @@ const uploadFiles = async (request, h) => {
 
     try {
       const results = await Promise.all(uploadPromises);
-      return h.response({
-        message: "All files uploaded successfully",
-        files: results
-      }).code(201);
+      return h
+        .response({
+          message: "All files uploaded successfully",
+          files: results,
+        })
+        .code(201);
     } catch (err) {
-      console.error('Error handling files', err);
-      return h.response({
-        message: "Error uploading one or more files",
-        error: err
-      }).code(500);
+      console.error("Error handling files", err);
+      return h
+        .response({
+          message: "Error uploading one or more files",
+          error: err,
+        })
+        .code(500);
     }
   }
-  return h.response('Please upload one or more files').code(400);
-}
-
-
+  return h.response("Please upload one or more files").code(400);
+};
 
 const getAllFiles = async (request, h) => {
   const directoryPath = process.cwd() + "/uploads/";
@@ -886,6 +890,7 @@ const getAllFiles = async (request, h) => {
     const files = await fs.promises.readdir(directoryPath);
     return h.response(files).code(200);
   } catch (err) {
+<<<<<<< HEAD
     console.error('Error reading directory:', err);
     return h.response('Failed to read files').code(500);
   }
@@ -900,6 +905,10 @@ const getFiles = (request, h) => {
     return h.file(file);
   } else {
     return h.response('File not found').code(404);
+=======
+    console.error("Error reading directory:", err);
+    return h.response("Failed to read files").code(500);
+>>>>>>> f2178cd11ee31cb437757166ca852b584d0958d8
   }
 };
 
@@ -937,5 +946,8 @@ module.exports = {
   deleteUser,
   uploadFiles,
   getAllFiles,
+<<<<<<< HEAD
   getFiles
+=======
+>>>>>>> f2178cd11ee31cb437757166ca852b584d0958d8
 };

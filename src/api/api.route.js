@@ -49,22 +49,17 @@ const userRoutes = [
   {
     method: "POST",
     path: "/users/{id}",
-    handler: API.updateUser
+    handler: API.updateUser 
   },
   {
     method: "DELETE",
     path: "/users/{id}",
-    handler: API.deleteUser
+    handler: API.deleteUser 
   },
   {
     method: "GET",
     path: "/singlepage/{id}",
     handler: API.getSinglePageById,
-  },
-  {
-    method: "GET",
-    path: "/singlepage",
-    handler: API.getAllSinglePages
   },
   {
     method: "POST",
@@ -151,6 +146,7 @@ const userRoutes = [
     path: "/tag/{id}",
     handler: API.deleteTagById,
   },
+<<<<<<< HEAD
 
   {
     method: 'POST',
@@ -175,6 +171,8 @@ const userRoutes = [
     path: '/uploads/{filename}',
     handler: API.getFiles
   }
+=======
+>>>>>>> f2178cd11ee31cb437757166ca852b584d0958d8
 ];
 
 module.exports = userRoutes;
