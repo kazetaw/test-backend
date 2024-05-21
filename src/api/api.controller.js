@@ -698,15 +698,15 @@ const createSinglePages = async (request, res) => {
 
 const createManageMenu = async (request, res) => {
   try {
-    const { menuName, path, isActive, parentId, icons } = request.payload;
+    const { menuName, pathMenu, isActive, parent, icons } = request.payload; // เปลี่ยนจาก parentId เป็น parent
 
     const newManageMenu = await prisma.manageMenu.create({
       data: {
         menuName,
-        path,
         isActive,
-        parentId,
+        parent, // ใช้ parent แทน parentId
         icons,
+        pathMenu: null, // ตั้งค่า pathMenu เป็น null หรือตามที่ต้องการ
       },
     });
 
@@ -723,16 +723,17 @@ const createManageMenu = async (request, res) => {
   }
 };
 
+
 const updateManageMenu = async (request, res) => {
   try {
     const { id } = request.params;
-    const { menuName, path, isActive, parentId, icons } = request.payload;
+    const { menuName, pathMenu, isActive, parentId, icons } = request.payload;
 
     const updatedManageMenu = await prisma.manageMenu.update({
       where: { id: parseInt(id) },
       data: {
         menuName,
-        path,
+        pathMenu,
         isActive,
         parentId,
         icons,

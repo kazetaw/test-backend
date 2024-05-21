@@ -63,15 +63,13 @@ model Tag {
 model ManageMenu {
   id        Int         @id @default(autoincrement())
   menuName  String
-  path      String?
+  pathMenu      String?
   isActive  Boolean
   parent    ManageMenu? @relation("ManageMenuChildren", fields: [parentId], references: [id])
   icons     String
-  // Add a foreign key to itself
   parentId  Int?
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
-
   children ManageMenu[] @relation("ManageMenuChildren")
 
   @@map("manage_menu")
