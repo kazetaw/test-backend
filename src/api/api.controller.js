@@ -420,7 +420,6 @@ const createTag = async (request, res) => {
         tagName,
       },
     });
-    console.log("🚀 ~ createTag ~ newTag:", newTag)
 
     return {
       statusCode: 201,
@@ -658,9 +657,9 @@ const deleteUser = async (request, res) => {
   }
 };
 
-const createSinglePages = async (request, h) => {
+const createSinglePages = async (request, res) => {
   try {
-    const { title, content, typeId, titleImages, pageLink, isActive, tag } = request.payload;
+    const { title, content, typeId, titleImages, isActive, tag } = request.payload;
 
     // Check if the provided typeId exists in the PageType table
     const existingPageType = await prisma.pageType.findUnique({
@@ -668,7 +667,10 @@ const createSinglePages = async (request, h) => {
     });
 
     if (!existingPageType) {
-      return Boom.badRequest('Invalid typeId. PageType not found.');
+      return {
+        statusCode: 400,
+        error: "Invalid typeId. PageType not found.",
+      };
     }
 
     const newSinglePage = await prisma.singlePage.create({
@@ -677,37 +679,39 @@ const createSinglePages = async (request, h) => {
         content,
         typeId,
         titleImages,
-        pageLink,
+        pageLink: "/new-page",
         isActive,
         timestampCreate: new Date(),
-        tag: tag || null, // Provide tag or set it to null
+        tag: tag || null, // Ensure tag is either provided or set to null
       },
     });
+    console.log("🚀 ~ createSinglePages ~ newSinglePage:", newSinglePage);
 
-    console.log('🚀 ~ createSinglePages ~ newSinglePage:', newSinglePage);
-
-    return h.response({
-      message: 'Single page created successfully',
-      data: newSinglePage,
-    }).code(201);
+    return {
+      statusCode: 201,
+      result: {
+        message: "Single page created successfully",
+        data: newSinglePage,
+      },
+    };
   } catch (error) {
-    console.error('Error:', error);
-    // Use Boom to create a proper error response
-    return Boom.badImplementation(error.message);
+    console.error("Error:", error);
+    return Boom.badImplementation(error);
   }
 };
 
+
 const createManageMenu = async (request, res) => {
   try {
-    const { menuName, path, isActive, parentId, icons } = request.payload;
+    const { menuName, pathMenu, isActive, parent, icons } = request.payload; // เปลี่ยนจาก parentId เป็น parent
 
     const newManageMenu = await prisma.manageMenu.create({
       data: {
         menuName,
-        path,
         isActive,
-        parentId,
+        parent, // ใช้ parent แทน parentId
         icons,
+        pathMenu: null, // ตั้งค่า pathMenu เป็น null หรือตามที่ต้องการ
       },
     });
 
@@ -724,16 +728,17 @@ const createManageMenu = async (request, res) => {
   }
 };
 
+
 const updateManageMenu = async (request, res) => {
   try {
     const { id } = request.params;
-    const { menuName, path, isActive, parentId, icons } = request.payload;
+    const { menuName, pathMenu, isActive, parentId, icons } = request.payload;
 
     const updatedManageMenu = await prisma.manageMenu.update({
       where: { id: parseInt(id) },
       data: {
         menuName,
-        path,
+        pathMenu,
         isActive,
         parentId,
         icons,
