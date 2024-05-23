@@ -214,19 +214,7 @@ const createSinglePage = async (request, h) => {
     return Boom.badImplementation(error);
   }
 };
-const getAllPageTypes = async (request, h) => {
-  try {
-    const pageTypes = await prisma.pageType.findMany();
 
-    return {
-      statusCode: 200,
-      result: pageTypes,
-    };
-  } catch (error) {
-    console.error("Error:", error);
-    throw Boom.badImplementation(error);
-  }
-};
 const getAllSinglePages = async (request, h) => {
   try {
     const singlePages = await prisma.singlePage.findMany({
@@ -898,24 +886,26 @@ const uploadFiles = async (request, h) => {
 
 const getAllFiles = async (request, h) => {
   const directoryPath = process.cwd() + "/uploads/";
+
   try {
     const files = await fs.promises.readdir(directoryPath);
     return h.response(files).code(200);
   } catch (err) {
-    console.error('Error reading directory:', err);
-    return h.response('Failed to read files').code(500);
+    console.error("Error reading directory:", err);
+    return h.response("Failed to read files").code(500);
   }
 };
+const getAllPageTypes = async (request, h) => {
+  try {
+    const pageTypes = await prisma.pageType.findMany();
 
-
-const getFiles = (request, h) => {
-  const filename = request.params.filename;
-  const file = process.cwd() + "/uploads/" + filename;
-
-  if (fs.existsSync(file)) {
-    return h.file(file);
-  } else {
-    return h.response('File not found').code(404);
+    return {
+      statusCode: 200,
+      result: pageTypes,
+    };
+  } catch (error) {
+    console.error("Error:", error);
+    throw Boom.badImplementation(error);
   }
 };
 
@@ -953,5 +943,5 @@ module.exports = {
   deleteUser,
   uploadFiles,
   getAllFiles,
-  getFiles
+  getAllPageTypes,
 };

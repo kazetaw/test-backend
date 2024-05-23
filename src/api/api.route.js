@@ -151,31 +151,6 @@ const userRoutes = [
     path: "/pagetype",
     handler: API.getAllPageTypes,
   },
-
-
-  {
-    method: 'POST',
-    path: '/upload',
-    options: {
-      payload: {
-        allow: 'multipart/form-data',
-        multipart: true,
-        output: 'stream',
-        maxBytes: 5048576,
-      }
-    },
-    handler: API.uploadFiles
-  },
-  {
-    method: 'GET',
-    path: '/uploads',
-    handler: API.getAllFiles
-  },
-  {
-    method: 'GET',
-    path: '/uploads/{filename}',
-    handler: API.getFiles
-  }
 ];
 
 module.exports = userRoutes;
