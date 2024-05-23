@@ -146,6 +146,11 @@ const userRoutes = [
     path: "/tag/{id}",
     handler: API.deleteTagById,
   },
+  {
+    method: "GET",
+    path: "/pagetype",
+    handler: API.getAllPageTypes,
+  },
 ];
 
 module.exports = userRoutes;

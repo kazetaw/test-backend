@@ -214,7 +214,19 @@ const createSinglePage = async (request, h) => {
     return Boom.badImplementation(error);
   }
 };
+const getAllPageTypes = async (request, h) => {
+  try {
+    const pageTypes = await prisma.pageType.findMany();
 
+    return {
+      statusCode: 200,
+      result: pageTypes,
+    };
+  } catch (error) {
+    console.error("Error:", error);
+    throw Boom.badImplementation(error);
+  }
+};
 const getAllSinglePages = async (request, h) => {
   try {
     const singlePages = await prisma.singlePage.findMany({
@@ -930,4 +942,5 @@ module.exports = {
   deleteUser,
   uploadFiles,
   getAllFiles,
+  getAllPageTypes,
 };
