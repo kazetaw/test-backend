@@ -151,6 +151,21 @@ const userRoutes = [
     path: "/pagetype",
     handler: API.getAllPageTypes,
   },
+  {
+    method: "POST",
+    path: "/upload",
+    handler: API.uploadFiles,
+  },
+  {
+    method: "GET",
+    path: "/uploads",
+    handler: API.getAllFiles,
+  },
+  {
+    method: "GET",
+    path: "/uploads/{filename}",
+    handler: API.getByfilename,
+  },
 ];
 
 module.exports = userRoutes;
