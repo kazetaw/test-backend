@@ -49,12 +49,12 @@ const userRoutes = [
   {
     method: "POST",
     path: "/users/{id}",
-    handler: API.updateUser 
+    handler: API.updateUser
   },
   {
     method: "DELETE",
     path: "/users/{id}",
-    handler: API.deleteUser 
+    handler: API.deleteUser
   },
   {
     method: "GET",
@@ -152,9 +152,17 @@ const userRoutes = [
     handler: API.getAllPageTypes,
   },
   {
-    method: "POST",
-    path: "/upload",
-    handler: API.uploadFiles,
+    method: 'POST',
+    path: '/upload',
+    options: {
+      payload: {
+        allow: 'multipart/form-data',
+        multipart: true,
+        maxBytes: 5048576,
+        output: 'stream'
+      },
+      handler: API.uploadFiles
+    }
   },
   {
     method: "GET",
