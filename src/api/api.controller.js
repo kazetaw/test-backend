@@ -661,47 +661,51 @@ const deleteUser = async (request, res) => {
   }
 };
 
-const createSinglePages = async (request, res) => {
+const createSinglePages = async (request, h) => {
+  const { title, content, typeId, titleImages, isActive, tag } = request.payload;
+
   try {
-    const { title, content, typeId, titleImages, isActive, tag } =
-      request.payload;
-
-    // Check if the provided typeId exists in the PageType table
-    const existingPageType = await prisma.pageType.findUnique({
-      where: { id: typeId },
-    });
-
-    if (!existingPageType) {
-      return {
-        statusCode: 400,
-        error: "Invalid typeId. PageType not found.",
-      };
-    }
-
+    // Create the single page
     const newSinglePage = await prisma.singlePage.create({
       data: {
         title,
         content,
         typeId,
         titleImages,
-        pageLink: "/new-page",
+        pageLink: "", // Temporary value, will be updated below
         isActive,
         timestampCreate: new Date(),
         tag: tag || null, // Ensure tag is either provided or set to null
       },
     });
-    console.log("🚀 ~ createSinglePages ~ newSinglePage:", newSinglePage);
 
-    return {
+    // Update the pageLink with the new ID
+    const updatedSinglePage = await prisma.singlePage.update({
+      where: { id: newSinglePage.id },
+      data: { pageLink: `/public/ui-components/${newSinglePage.id}` },
+    });
+
+    console.log("🚀 ~ createSinglePages ~ updatedSinglePage:", updatedSinglePage);
+
+    // Return the response with the updated single page
+    return h.response({
       statusCode: 201,
       result: {
         message: "Single page created successfully",
-        data: newSinglePage,
+        data: updatedSinglePage,
       },
-    };
+    }).code(201);
+
   } catch (error) {
-    console.error("Error:", error);
-    return Boom.badImplementation(error);
+    console.error("Error creating single page:", error);
+
+    // Check if the error is a Prisma error and log specific details
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      console.error("Prisma error code:", error.code);
+      console.error("Prisma error meta:", error.meta);
+    }
+
+    return Boom.badImplementation("An internal server error occurred");
   }
 };
 

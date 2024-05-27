@@ -63,7 +63,7 @@ model Tag {
 model ManageMenu {
   id        Int         @id @default(autoincrement())
   menuName  String
-  pathMenu      String?
+  pathMenu  String?
   isActive  Boolean
   parent    ManageMenu? @relation("ManageMenuChildren", fields: [parentId], references: [id])
   icons     String?
