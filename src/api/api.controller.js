@@ -716,10 +716,10 @@ const createManageMenu = async (request, res) => {
     const newManageMenu = await prisma.manageMenu.create({
       data: {
         menuName,
-        pathMenu:pathMenu || null,
+        pathMenu: pathMenu || null,
         isActive,
         parentId,
-        icons:icons|| null,
+        icons: icons || null,
       },
     });
 
@@ -841,64 +841,64 @@ const getAllManageMenus = async (request, res) => {
     return Boom.badImplementation(error);
   }
 };
-//data img
+
 const uploadFiles = async (request, h) => {
-  const data = request.payload;
-  if (data.files && data.files.length) {
-    const uploadPromises = data.files.map((file) => {
-      const filename = file.hapi.filename;
-      const destination = process.cwd() + "/uploads/" + filename;
-      const fileStream = fs.createWriteStream(destination);
+  let file = request.payload.files;
+  console.log("🚀 ~ uploadFiles ~ request.payload.files:", request.payload.files)
+  file = Array.isArray(file) ? file : [file];
 
+  try {
+    const results = await Promise.all(file.map(file => {
+      const path = `${process.cwd()}/uploads/${file.hapi.filename}`;
       return new Promise((resolve, reject) => {
-        file.on("error", (err) => {
-          console.error("Stream error in file", filename, err);
-          reject(`Error in file ${filename}`);
-        });
-        fileStream.on("error", (err) => {
-          console.error("Write error in file", filename, err);
-          reject(`Error writing file ${filename}`);
-        });
-        fileStream.on("finish", () => {
-          console.log(`File uploaded successfully at ${destination}`);
-          resolve(`File uploaded successfully at ${destination}`);
-        });
-        file.pipe(fileStream);
-      });
-    });
 
-    try {
-      const results = await Promise.all(uploadPromises);
-      return h
-        .response({
-          message: "All files uploaded successfully",
-          files: results,
-        })
-        .code(201);
-    } catch (err) {
-      console.error("Error handling files", err);
-      return h
-        .response({
-          message: "Error uploading one or more files",
-          error: err,
-        })
-        .code(500);
-    }
+        const output = fs.createWriteStream(path);
+        file.on('error', err => reject(`Error in ${file.hapi.filename}: ${err}`));
+
+        output.on('finish', () =>
+          resolve({
+            filename: file.hapi.filename,
+            file: path,
+            path: `/uploads/${file.hapi.filename}`
+          })
+        );
+
+        file.pipe(output);
+      });
+    }));
+    return h.response({ message: "Files uploaded", file: results }).code(201);
+  } catch (err) {
+    return h.response({ message: "Upload failed", error: err }).code(500);
   }
-  return h.response("Please upload one or more files").code(400);
 };
+
+
 
 const getAllFiles = async (request, h) => {
   const directoryPath = process.cwd() + "/uploads/";
-
   try {
     const files = await fs.promises.readdir(directoryPath);
-    return h.response(files).code(200);
+    const filesWithPath = files.map(file => "/uploads/" + file);
+    return h.response(filesWithPath).code(200);
   } catch (err) {
-    console.error("Error reading directory:", err);
-    return h.response("Failed to read files").code(500);
+    console.error('Error reading directory:', err);
+    return h.response('Failed to read files').code(500);
   }
 };
+
+const getByfilename = (request, h) => {
+  const filename = request.params.filename;
+  const filePath = process.cwd() + "/uploads/" + filename;
+
+  // Ensure the file exists
+  if (!fs.existsSync(filePath)) {
+    return h.response('File not found').code(404);
+  }
+
+  // Return the file as a stream
+  return h.file(filePath);
+};
+
 const getAllPageTypes = async (request, h) => {
   try {
     const pageTypes = await prisma.pageType.findMany();
@@ -947,5 +947,6 @@ module.exports = {
   deleteUser,
   uploadFiles,
   getAllFiles,
+  getByfilename,
   getAllPageTypes,
 };

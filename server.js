@@ -10,14 +10,14 @@ const init = async () => {
     host: 'localhost',
     routes: {
       cors: {
-          origin: ['http://localhost:3000'] // Specify the origin(s) you want to allow
-      }
-  }
+        origin: ['http://localhost:3000']
+      },
+    }
   });
 
   await server.register(inert);
 
-  
+
   // Define routes
   server.route(userRoutes);
 
