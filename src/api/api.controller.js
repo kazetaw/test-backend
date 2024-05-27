@@ -217,16 +217,16 @@ const createSinglePage = async (request, h) => {
 
 const getAllSinglePages = async (request, h) => {
   try {
-    const singlePages = await prisma.singlePage.findMany({
-      include: {
-        type: true, // Include the related PageType
+    const singlePage = await prisma.singlePage.findMany();
+    return {
+      statusCode: 200,
+      result: {
+        singlePage,
       },
-    });
-
-    return h.response({ data: singlePages });
+    };
   } catch (error) {
     console.error("Error:", error);
-    return h.response("Internal server error").code(500);
+    return Boom.badImplementation(error);
   }
 };
 
@@ -912,6 +912,7 @@ const getAllPageTypes = async (request, h) => {
     throw Boom.badImplementation(error);
   }
 };
+
 
 module.exports = {
   createManageMenu,
