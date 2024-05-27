@@ -682,12 +682,11 @@ const createSinglePages = async (request, h) => {
     // Update the pageLink with the new ID
     const updatedSinglePage = await prisma.singlePage.update({
       where: { id: newSinglePage.id },
-      data: { pageLink: `/public/ui-components/${newSinglePage.id}` },
+      data: { pageLink: `/public/ui-components/content/${newSinglePage.id}` },
     });
 
     console.log("🚀 ~ createSinglePages ~ updatedSinglePage:", updatedSinglePage);
 
-    // Return the response with the updated single page
     return h.response({
       statusCode: 201,
       result: {
@@ -866,11 +865,12 @@ const uploadFiles = async (request, h) => {
         file.pipe(output);
       });
     }));
-    return h.response({ message: "Files uploaded", file: results }).code(201);
+    return h.response({ message: "Files uploaded", file: results }).code(201).header("Access-Control-Allow-Origin", "*");
   } catch (err) {
-    return h.response({ message: "Upload failed", error: err }).code(500);
+    return h.response({ message: "Upload failed", error: err }).code(500).header("Access-Control-Allow-Origin", "*");
   }
 };
+
 
 
 

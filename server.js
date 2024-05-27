@@ -10,10 +10,12 @@ const init = async () => {
     host: 'localhost',
     routes: {
       cors: {
-        origin: ['http://localhost:3000']
+        origin: ['http://localhost:3000'],
+        credentials: true
       },
     }
   });
+  
 
   await server.register(inert);
 
