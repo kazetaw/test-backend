@@ -682,7 +682,7 @@ const createSinglePages = async (request, h) => {
     // Update the pageLink with the new ID
     const updatedSinglePage = await prisma.singlePage.update({
       where: { id: newSinglePage.id },
-      data: { pageLink: `/public/ui-components/${newSinglePage.id}` },
+      data: { pageLink: `/public/ui-components/content/${newSinglePage.id}` },
     });
 
     console.log("🚀 ~ createSinglePages ~ updatedSinglePage:", updatedSinglePage);
