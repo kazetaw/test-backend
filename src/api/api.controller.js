@@ -217,7 +217,11 @@ const createSinglePage = async (request, h) => {
 
 const getAllSinglePages = async (request, h) => {
   try {
-    const singlePage = await prisma.singlePage.findMany();
+    const singlePage = await prisma.singlePage.findMany({
+      include: {
+        type: true, // Include the related PageType
+      },
+    });
     return {
       statusCode: 200,
       result: {
@@ -346,18 +350,15 @@ const createPageType = async (request, res) => {
 };
 
 const getPageTypeById = async (request, res) => {
-  try {
-    const { id } = request.params;
+  const { id } = request.params; // Assuming the ID is passed as a parameter in the request
 
+  try {
     const pageType = await prisma.pageType.findUnique({
-      where: { id: parseInt(id) },
+      where: { id: parseInt(id) }, // Parse the ID to ensure it's a number
     });
 
     if (!pageType) {
-      return {
-        statusCode: 404,
-        error: "PageType not found",
-      };
+      return Boom.notFound("Page type not found");
     }
 
     return {
@@ -366,10 +367,9 @@ const getPageTypeById = async (request, res) => {
     };
   } catch (error) {
     console.error("Error:", error);
-    return Boom.badImplementation(error);
+    throw Boom.badImplementation(error);
   }
 };
-
 const updatePageTypeById = async (request, res) => {
   try {
     const { id } = request.params;
@@ -685,13 +685,21 @@ const createSinglePages = async (request, h) => {
       data: { pageLink: `/public/ui-components/content/${newSinglePage.id}` },
     });
 
+    // Fetch the typeName based on typeId
+    const typeData = await prisma.pageType.findUnique({
+      where: { id: typeId },
+      select: { typeName: true }, // Select only the typeName field
+    });
+
+    const typeName = typeData?.typeName || "ไม่มีประเภท"; // Default if typeName not found
+
     console.log("🚀 ~ createSinglePages ~ updatedSinglePage:", updatedSinglePage);
 
     return h.response({
       statusCode: 201,
       result: {
         message: "Single page created successfully",
-        data: updatedSinglePage,
+        data: { ...updatedSinglePage, typeName }, // Include typeName in the response data
       },
     }).code(201);
 
@@ -708,7 +716,8 @@ const createSinglePages = async (request, h) => {
   }
 };
 
-const createManageMenu = async (request, res) => {
+
+const createManageMenu = async (request, h) => {
   try {
     const { menuName, pathMenu, isActive, parentId, icons } = request.payload;
 
@@ -828,18 +837,43 @@ const getManageMenuById = async (request, res) => {
 
 const getAllManageMenus = async (request, res) => {
   try {
-    const manageMenus = await prisma.manageMenu.findMany();
+    const manageMenus = await prisma.manageMenu.findMany({
+      include: {
+        children: {
+          include: {
+            children: true,
+          },
+        },
+      },
+    });
+
+    // สร้างฟังก์ชันเพื่อแปลงโครงสร้างข้อมูลเป็นรูปแบบที่ต้องการ
+    const formatMenu = (menu) => {
+      const { id, menuName, parentId, pathMenu, children } = menu;
+      const formattedMenu = { id, name: menuName, parentId, pathMenu, children: [] };
+
+      if (children && children.length > 0) {
+        formattedMenu.children = children.map(child => formatMenu(child));
+      }
+
+      return formattedMenu;
+    };
+
+    // แปลงโครงสร้างข้อมูลที่ได้จาก database ให้เป็นรูปแบบที่ต้องการ
+    const result = manageMenus.map(menu => formatMenu(menu));
+
     return {
       statusCode: 200,
-      result: {
-        manageMenus,
-      },
+      result,
     };
   } catch (error) {
     console.error("Error:", error);
     return Boom.badImplementation(error);
   }
 };
+
+
+
 
 const uploadFiles = async (request, h) => {
   let file = request.payload.files;
@@ -870,8 +904,6 @@ const uploadFiles = async (request, h) => {
     return h.response({ message: "Upload failed", error: err }).code(500).header("Access-Control-Allow-Origin", "*");
   }
 };
-
-
 
 
 const getAllFiles = async (request, h) => {
