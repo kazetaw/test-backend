@@ -855,7 +855,7 @@ const getAllManageMenus = async (request, res) => {
       if (children && children.length > 0) {
         formattedMenu.children = children.map(child => formatMenu(child)).filter(childMenu => childMenu.parentId === id);
       } else {
-        formattedMenu.children = [0];
+        formattedMenu.children = [];
       }
 
       return formattedMenu;
