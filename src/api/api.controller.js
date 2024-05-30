@@ -850,17 +850,19 @@ const getAllManageMenus = async (request, res) => {
     // สร้างฟังก์ชันเพื่อแปลงโครงสร้างข้อมูลเป็นรูปแบบที่ต้องการ
     const formatMenu = (menu) => {
       const { id, menuName, parentId, pathMenu, children } = menu;
-      const formattedMenu = { id, name: menuName, parentId, pathMenu, children: [] };
+      const formattedMenu = { id, name: menuName, parentId, pathMenu };
 
       if (children && children.length > 0) {
-        formattedMenu.children = children.map(child => formatMenu(child));
+        formattedMenu.children = children.map(child => formatMenu(child)).filter(childMenu => childMenu.parentId === id);
+      } else {
+        formattedMenu.children = 0;
       }
 
       return formattedMenu;
     };
 
     // แปลงโครงสร้างข้อมูลที่ได้จาก database ให้เป็นรูปแบบที่ต้องการ
-    const result = manageMenus.map(menu => formatMenu(menu));
+    const result = manageMenus.map(menu => formatMenu(menu)).filter(menu => menu.parentId === null); // กรองเฉพาะเมนูที่ไม่มี parentId
 
     return {
       statusCode: 200,
@@ -871,9 +873,6 @@ const getAllManageMenus = async (request, res) => {
     return Boom.badImplementation(error);
   }
 };
-
-
-
 
 const uploadFiles = async (request, h) => {
   let file = request.payload.files;
